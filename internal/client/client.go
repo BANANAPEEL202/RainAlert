@@ -11,9 +11,7 @@ import (
 	"rainalert/internal/config"
 )
 
-const (
-	openMeteoBaseURL = "https://api.open-meteo.com/v1/forecast"
-)
+const openMeteoBaseURL = "https://api.open-meteo.com/v1/forecast"
 
 type OpenMeteoResponse struct {
 	Hourly struct {
@@ -22,13 +20,11 @@ type OpenMeteoResponse struct {
 	} `json:"hourly"`
 }
 
-// Forecast represents processed weather forecast data
 type Forecast struct {
 	RainTomorrow bool
 	MaxRain      float64
 }
 
-// Client represents an Open-Meteo API client
 type Client struct {
 	httpClient *http.Client
 	baseURL    string
@@ -103,10 +99,8 @@ func maxRain(data *OpenMeteoResponse) float64 {
 }
 
 // GetForecast fetches and processes weather forecast
-func GetForecast(cfg config.Config) (Forecast, error) {
-	client := NewClient()
-
-	data, err := client.GetWeatherData(cfg)
+func (c *Client) GetForecast(cfg config.Config) (Forecast, error) {
+	data, err := c.GetWeatherData(cfg)
 	if err != nil {
 		return Forecast{}, fmt.Errorf("failed to get weather data: %w", err)
 	}

@@ -8,7 +8,6 @@ import (
 	"testing"
 )
 
-// MockRoundTripper implements http.RoundTripper for mocking HTTP requests
 type MockRoundTripper struct {
 	response *http.Response
 	err      error

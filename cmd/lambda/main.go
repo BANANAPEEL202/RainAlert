@@ -3,25 +3,24 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 
+	"rainalert/internal/client"
 	"rainalert/internal/config"
-	"rainalert/internal/notify"
-	"rainalert/internal/weather"
-
-	"github.com/aws/aws-lambda-go/lambda"
+	"rainalert/internal/ntfy"
+	//"github.com/aws/aws-lambda-go/lambda"
 )
 
 func handler(ctx context.Context) (string, error) {
 	cfg := config.Load()
+	client := client.NewClient()
 
-	forecast, err := weather.GetForecast(cfg)
+	forecast, err := client.GetForecast(cfg)
 	if err != nil {
 		return "", err
 	}
 
 	if forecast.RainTomorrow {
-		err = notify.SendNtfy(cfg, "☔ Rain expected tomorrow!")
+		err = ntfy.SendNtfy(cfg, "☔ Rain expected tomorrow!")
 		if err != nil {
 			return "", err
 		}
@@ -33,6 +32,29 @@ func handler(ctx context.Context) (string, error) {
 	return "done", nil
 }
 
+/*
 func main() {
 	lambda.Start(handler)
+}
+*/
+
+func main() {
+	// Load config and client just like in Lambda
+	cfg := config.Load()
+	client := client.NewClient()
+
+	forecast, err := client.GetForecast(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if forecast.RainTomorrow {
+		err = ntfy.SendNtfy(cfg, "☔ Rain expected tomorrow!")
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Notification sent")
+	} else {
+		log.Println("No rain tomorrow")
+	}
 }
