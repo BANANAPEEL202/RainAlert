@@ -1,9 +1,9 @@
 {
-  "latitude": 16.1142,
-  "longitude": -91.5103,
+  "latitude": 33.749,
+  "longitude": -84.38798,
   "location": "Atlanta, GA",
   "timezone": "America/New_York",
-  "forecast_range": 12,
-  "ntfy_time": "08:00",
+  "forecast_range_hrs": 24,
+  "ntfy_time": 8,
   "ntfy_topic": "mytopic9876"
 }
