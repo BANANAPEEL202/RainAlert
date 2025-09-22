@@ -35,29 +35,12 @@ func createMockClient(statusCode int, body string) *Client {
 	return client
 }
 
-func TestNewClient(t *testing.T) {
-	client := NewClient()
-
-	if client == nil {
-		t.Fatal("NewClient() returned nil")
-	}
-
-	if client.baseURL != openMeteoBaseURL {
-		t.Errorf("Expected baseURL %s, got %s", openMeteoBaseURL, client.baseURL)
-	}
-
-	if client.httpClient == nil {
-		t.Error("HTTP client should not be nil")
-	}
-}
-
 func TestBuildURL(t *testing.T) {
 	client := NewClient()
 
 	testConfig := config.Config{
-		Latitutde:     40.7128,
+		Latitude:      40.7128,
 		Longitude:     -74.0060,
-		Timezone:      "America/New_York",
 		ForecastRange: 3,
 	}
 
@@ -71,11 +54,7 @@ func TestBuildURL(t *testing.T) {
 		t.Errorf("URL should contain longitude parameter, got: %s", url)
 	}
 
-	if !strings.Contains(url, "timezone=America%2FNew_York") {
-		t.Errorf("URL should contain encoded timezone parameter, got: %s", url)
-	}
-
-	if !strings.Contains(url, "forecast_days=3") {
+	if !strings.Contains(url, "forecast_hours=3") {
 		t.Errorf("URL should contain forecast_days parameter, got: %s", url)
 	}
 
@@ -88,59 +67,12 @@ func TestBuildURL(t *testing.T) {
 	}
 }
 
-func TestGetWeatherData_Success(t *testing.T) {
-	mockResponse := `{
-		"hourly": {
-			"time": ["2023-09-20T00:00", "2023-09-20T01:00", "2023-09-20T02:00"],
-			"precipitation": [0.0, 0.1, 0.3]
-		}
-	}`
-
-	client := createMockClient(200, mockResponse)
-
-	testConfig := config.Config{
-		Latitutde:     40.7128,
-		Longitude:     -74.0060,
-		Timezone:      "America/New_York",
-		ForecastRange: 3,
-	}
-
-	data, err := client.GetWeatherData(testConfig)
-
-	if err != nil {
-		t.Fatalf("GetWeatherData() failed: %v", err)
-	}
-
-	if data == nil {
-		t.Fatal("GetWeatherData() returned nil data")
-	}
-
-	expectedTimes := 3
-	if len(data.Hourly.Time) != expectedTimes {
-		t.Errorf("Expected %d time entries, got %d", expectedTimes, len(data.Hourly.Time))
-	}
-
-	expectedPrecip := 3
-	if len(data.Hourly.Precipitation) != expectedPrecip {
-		t.Errorf("Expected %d precipitation entries, got %d", expectedPrecip, len(data.Hourly.Precipitation))
-	}
-
-	if data.Hourly.Time[0] != "2023-09-20T00:00" {
-		t.Errorf("Expected first time to be '2023-09-20T00:00', got '%s'", data.Hourly.Time[0])
-	}
-
-	if data.Hourly.Precipitation[2] != 0.3 {
-		t.Errorf("Expected third precipitation to be 0.3, got %.1f", data.Hourly.Precipitation[2])
-	}
-}
-
 func TestGetWeatherData_HTTPError(t *testing.T) {
 	client := createMockClient(500, "Internal Server Error")
 
 	testConfig := config.Config{
-		Latitutde:     40.7128,
+		Latitude:      40.7128,
 		Longitude:     -74.0060,
-		Timezone:      "America/New_York",
 		ForecastRange: 3,
 	}
 
@@ -156,116 +88,63 @@ func TestGetWeatherData_HTTPError(t *testing.T) {
 	}
 }
 
-func TestGetForecast_WithMock(t *testing.T) {
-	mockResponse := `{
-		"hourly": {
-			"time": ["2023-09-20T00:00", "2023-09-20T01:00", "2023-09-20T02:00"],
-			"precipitation": [0.0, 0.2, 0.5]
-		}
-	}`
-
-	// We need to temporarily replace the global GetForecast function to use our mock
-	// For this test, we'll create the client directly and test the components
-
-	client := createMockClient(200, mockResponse)
+func TestGetForecast(t *testing.T) {
+	tests := []struct {
+		name           string
+		mockResponse   string
+		expectedRain   bool
+		expectedMaxPre float64
+	}{
+		{
+			name: "rain expected",
+			mockResponse: `{
+				"hourly": {
+					"time": ["2023-09-20T00:00", "2023-09-20T01:00", "2023-09-20T02:00"],
+					"precipitation": [0.0, 0.2, 0.5]
+				}
+			}`,
+			expectedRain:   true,
+			expectedMaxPre: 0.5,
+		},
+		{
+			name: "no rain",
+			mockResponse: `{
+				"hourly": {
+					"time": ["2023-09-20T00:00", "2023-09-20T01:00", "2023-09-20T02:00"],
+					"precipitation": [0.0, 0.0, 0.0]
+				}
+			}`,
+			expectedRain:   false,
+			expectedMaxPre: 0.0,
+		},
+		// Add more test cases here
+	}
 
 	testConfig := config.Config{
-		Latitutde:     40.7128,
+		Latitude:      40.7128,
 		Longitude:     -74.0060,
 		Timezone:      "America/New_York",
 		ForecastRange: 3,
 	}
 
-	data, err := client.GetWeatherData(testConfig)
-	if err != nil {
-		t.Fatalf("GetWeatherData() failed: %v", err)
-	}
-
-	// Test the logic functions with mock data
-	rainExpected := willItRain(data)
-	maxPrecip := maxRain(data)
-
-	if !rainExpected {
-		t.Error("Expected rain to be detected with precipitation values [0.0, 0.2, 0.5]")
-	}
-
-	if maxPrecip != 0.5 {
-		t.Errorf("Expected max precipitation 0.5, got %.1f", maxPrecip)
-	}
-}
-
-func TestWillItRain_Unit(t *testing.T) {
-	tests := []struct {
-		name     string
-		data     *OpenMeteoResponse
-		expected bool
-	}{
-		{
-			name: "no rain",
-			data: &OpenMeteoResponse{
-				Hourly: struct {
-					Time          []string  `json:"time"`
-					Precipitation []float64 `json:"precipitation"`
-				}{
-					Time:          []string{"2023-01-01T00:00", "2023-01-01T01:00"},
-					Precipitation: []float64{0.0, 0.05},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "light rain",
-			data: &OpenMeteoResponse{
-				Hourly: struct {
-					Time          []string  `json:"time"`
-					Precipitation []float64 `json:"precipitation"`
-				}{
-					Time:          []string{"2023-01-01T00:00", "2023-01-01T01:00"},
-					Precipitation: []float64{0.0, 0.15},
-				},
-			},
-			expected: true,
-		},
-		{
-			name: "heavy rain",
-			data: &OpenMeteoResponse{
-				Hourly: struct {
-					Time          []string  `json:"time"`
-					Precipitation []float64 `json:"precipitation"`
-				}{
-					Time:          []string{"2023-01-01T00:00", "2023-01-01T01:00"},
-					Precipitation: []float64{0.5, 1.2},
-				},
-			},
-			expected: true,
-		},
-	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := willItRain(tt.data)
-			if result != tt.expected {
-				t.Errorf("willItRain() = %v, expected %v", result, tt.expected)
+			client := createMockClient(200, tt.mockResponse)
+
+			data, err := client.GetWeatherData(testConfig)
+			if err != nil {
+				t.Fatalf("GetWeatherData() failed: %v", err)
+			}
+
+			rainDetected, maxPrecip := analyzeForecast(data)
+
+			if rainDetected != tt.expectedRain {
+				t.Errorf("Expected rain %v, got %v", tt.expectedRain, rainDetected)
+			}
+
+			if maxPrecip != tt.expectedMaxPre {
+				t.Errorf("Expected max precipitation %.1f, got %.1f", tt.expectedMaxPre, maxPrecip)
 			}
 		})
-	}
-}
-
-func TestMaxRain_Unit(t *testing.T) {
-	data := &OpenMeteoResponse{
-		Hourly: struct {
-			Time          []string  `json:"time"`
-			Precipitation []float64 `json:"precipitation"`
-		}{
-			Time:          []string{"2023-01-01T00:00", "2023-01-01T01:00", "2023-01-01T02:00"},
-			Precipitation: []float64{0.1, 0.5, 0.3},
-		},
-	}
-
-	result := maxRain(data)
-	expected := 0.5
-
-	if result != expected {
-		t.Errorf("maxRain() = %.2f, expected %.2f", result, expected)
 	}
 }

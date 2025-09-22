@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -34,7 +35,13 @@ type Client struct {
 func NewClient() *Client {
 	return &Client{
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 60 * time.Second, // Increased timeout to 60 seconds
+			Transport: &http.Transport{
+				TLSHandshakeTimeout:   10 * time.Second, // TLS handshake timeout
+				ResponseHeaderTimeout: 60 * time.Second, // Response header timeout
+				IdleConnTimeout:       90 * time.Second, // Idle connection timeout
+				DisableKeepAlives:     false,            // Keep connections alive for reuse
+			},
 		},
 		baseURL: openMeteoBaseURL,
 	}
@@ -45,12 +52,14 @@ func (c *Client) buildURL(cfg config.Config) string {
 	u, _ := url.Parse(c.baseURL)
 	q := u.Query()
 
-	q.Set("latitude", strconv.FormatFloat(cfg.Latitutde, 'f', 6, 64))
+	q.Set("latitude", strconv.FormatFloat(cfg.Latitude, 'f', 6, 64))
 	q.Set("longitude", strconv.FormatFloat(cfg.Longitude, 'f', 6, 64))
+	// we are not using daily precipitation so that if a notification is sent at 12pm, it will cover 12pm to 12pm on the next day
+	// daily precititation only covers midnight to midnight
 	q.Set("hourly", "precipitation")
-	q.Set("timezone", cfg.Timezone)
-	q.Set("forecast_days", strconv.Itoa(cfg.ForecastRange))
+	q.Set("timezone", "auto")
 	q.Set("precipitation_unit", "inch")
+	q.Set("forecast_hours", strconv.Itoa(cfg.ForecastRange))
 
 	u.RawQuery = q.Encode()
 	return u.String()
@@ -60,6 +69,7 @@ func (c *Client) buildURL(cfg config.Config) string {
 func (c *Client) GetWeatherData(cfg config.Config) (*OpenMeteoResponse, error) {
 	url := c.buildURL(cfg)
 
+	fmt.Println("Requesting URL:", url) // Debugging line to print the URL
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request to Open-Meteo: %w", err)
@@ -78,24 +88,14 @@ func (c *Client) GetWeatherData(cfg config.Config) (*OpenMeteoResponse, error) {
 	return &weatherData, nil
 }
 
-// willItRain checks if there will be rain based on precipitation data
-func willItRain(data *OpenMeteoResponse) bool {
-	for _, hourlyData := range data.Hourly.Precipitation {
-		if hourlyData >= 0.1 {
-			return true
-		}
-	}
-	return false
-}
-
-func maxRain(data *OpenMeteoResponse) float64 {
+func analyzeForecast(data *OpenMeteoResponse) (bool, float64) {
 	max := 0.0
 	for _, hourlyData := range data.Hourly.Precipitation {
 		if hourlyData > max {
 			max = hourlyData
 		}
 	}
-	return max
+	return max >= 0.01, max
 }
 
 // GetForecast fetches and processes weather forecast
@@ -105,8 +105,11 @@ func (c *Client) GetForecast(cfg config.Config) (Forecast, error) {
 		return Forecast{}, fmt.Errorf("failed to get weather data: %w", err)
 	}
 
-	rainTomorrow := willItRain(data)
-	max := maxRain(data)
+	rainTomorrow, max := analyzeForecast(data)
+	for hour, precip := range data.Hourly.Precipitation {
+		log.Printf("%s: %.2f inches of precipitation", data.Hourly.Time[hour], precip)
+	}
+	log.Printf("Rain expected: %v, Max precipitation: %.2f inches", rainTomorrow, max)
 
 	return Forecast{
 		RainTomorrow: rainTomorrow,
