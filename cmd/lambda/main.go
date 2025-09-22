@@ -1,60 +1,61 @@
+// main.go
 package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
-
 	"rainalert/internal/client"
 	"rainalert/internal/config"
 	"rainalert/internal/ntfy"
-	//"github.com/aws/aws-lambda-go/lambda"
+	"time"
+
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func handler(ctx context.Context) (string, error) {
-	cfg := config.Load()
-	client := client.NewClient()
-
-	forecast, err := client.GetForecast(cfg)
+func Handler(ctx context.Context) (string, error) {
+	cfg, err := config.Load()
 	if err != nil {
 		return "", err
 	}
 
-	if forecast.RainTomorrow {
-		err = ntfy.SendNtfy(cfg, "☔ Rain expected tomorrow!")
-		if err != nil {
-			return "", err
-		}
-		log.Println("Notification sent")
-	} else {
-		log.Println("No rain tomorrow")
+	if time.Now().Hour() != cfg.NtfyHour {
+		log.Printf("Current hour %d does not match ntfy_time %d, exiting.", time.Now().Hour(), cfg.NtfyHour)
+		return "not the right hour", nil
 	}
 
-	return "done", nil
-}
-
-/*
-func main() {
-	lambda.Start(handler)
-}
-*/
-
-func main() {
-	// Load config and client just like in Lambda
-	cfg := config.Load()
 	client := client.NewClient()
 
 	forecast, err := client.GetForecast(cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error getting forecast: %v", err)
+		ntfy.SendErrorAlert(cfg, err.Error())
+		return "", err
 	}
 
 	if forecast.RainTomorrow {
-		err = ntfy.SendNtfy(cfg, "☔ Rain expected tomorrow!")
+		err = ntfy.SendRainAlert(cfg)
 		if err != nil {
-			log.Fatal(err)
+			return "", err
 		}
-		log.Println("Notification sent")
+	}
+	return "done", nil
+}
+
+// For local testing, run with `go run cmd/lambda/main.go -local`
+func main() {
+	local := flag.Bool("local", false, "Run locally without Lambda")
+	flag.Parse()
+
+	if *local {
+		ctx := context.Background()
+		_, err := Handler(ctx)
+		if err != nil {
+			fmt.Println("Error running handler locally:", err)
+			return
+		}
 	} else {
-		log.Println("No rain tomorrow")
+		lambda.Start(Handler)
 	}
 }
