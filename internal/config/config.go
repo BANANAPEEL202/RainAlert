@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 )
@@ -16,12 +15,13 @@ type Config struct {
 	ForecastRange int     `json:"forecast_range_hrs"`
 	NtfyHour      int     `json:"ntfy_time"`
 	NtfyTopic     string  `json:"ntfy_topic"`
+	IgnoreNoRain  bool    `json:"ignore_no_rain"`
 }
 
-func Load() (Config, error) {
-	file, err := os.Open("config.json")
+func Load(configPath string) (Config, error) {
+	file, err := os.Open(configPath)
 	if err != nil {
-		log.Fatalf("failed to open config.json: %v", err)
+		return Config{}, fmt.Errorf("failed to open config file: %w", err)
 	}
 	defer file.Close()
 
