@@ -26,17 +26,14 @@ func Handler(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	// Load the timezone from config
 	loc, err := time.LoadLocation(cfg.Timezone)
 	if err != nil {
 		log.Printf("Error loading timezone %s: %v", cfg.Timezone, err)
 		return "", err
 	}
-
-	// Get current time in the configured timezone
 	currentHour := time.Now().In(loc).Hour()
-	if currentHour != cfg.NtfyHour {
-		log.Printf("Current hour %d does not match ntfy_time %d, exiting.", currentHour, cfg.NtfyHour)
+	if !cfg.NtfyTimes.Contains(currentHour) {
+		log.Printf("Current hour %d not in ntfy_times %v, exiting.", currentHour, cfg.NtfyTimes)
 		return "done", nil
 	}
 
