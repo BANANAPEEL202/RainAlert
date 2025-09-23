@@ -8,8 +8,9 @@ import (
 	"rainalert/internal/config"
 )
 
-func SendRainAlert(cfg config.Config) error {
-	return SendNtfy(cfg, "Rain Alert", "5", "Rain expected tomorrow!")
+func SendRainAlert(cfg config.Config, maxRain float64) error {
+	msg := fmt.Sprintf("🌧️ %.2f in of rain expected tomorrow in %s", maxRain, cfg.Location)
+	return SendNtfy(cfg, "Rain Alert", "5", msg)
 }
 
 func SendNoRainAlert(cfg config.Config) error {
