@@ -9,7 +9,7 @@ import (
 )
 
 func SendRainAlert(cfg config.Config, maxRain float64) error {
-	msg := fmt.Sprintf("🌧️ %.2f in of rain expected tomorrow in %s", maxRain, cfg.Location)
+	msg := fmt.Sprintf("🌧️ %.1fin of rain expected tomorrow in %s", maxRain, cfg.Location)
 	return SendNtfy(cfg, "Rain Alert", "5", msg)
 }
 
