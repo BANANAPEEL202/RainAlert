@@ -9,12 +9,12 @@ import (
 )
 
 func SendRainAlert(cfg config.Config, maxRain float64) error {
-	msg := fmt.Sprintf("🌧️ %.1fin of rain expected tomorrow in %s", maxRain, cfg.Location)
+	msg := fmt.Sprintf("🌧️ %.1fin of rain expected in the next %d hours", maxRain, cfg.ForecastRange)
 	return SendNtfy(cfg, "Rain Alert", "5", msg)
 }
 
 func SendNoRainAlert(cfg config.Config) error {
-	return SendNtfy(cfg, "No Rain", "3", "No rain expected tomorrow.")
+	return SendNtfy(cfg, "No Rain", "3", "No rain expected in the next %d hours.", cfg.ForecastRange)
 }
 
 func SendErrorAlert(cfg config.Config, errMsg string) error {
