@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: RainAlert Lambda
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: provided.al2
+    Handler: bootstrap
+    MemorySize: 128
+    Tracing: Active
+    Environment:
+      Variables:
+        CONFIG_PATH: "/var/task/config.json"
+
+Resources:
+  RainAlertLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: rainalert-lambda
+      CodeUri: cmd/lambda/
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        HourlySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+  RainAlertLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/rainalert-lambda
+      RetentionInDays: 3
