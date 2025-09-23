@@ -31,11 +31,10 @@ type Client struct {
 	baseURL    string
 }
 
-// NewClient creates a new Open-Meteo client
 func NewClient() *Client {
 	return &Client{
 		httpClient: &http.Client{
-			Timeout: 60 * time.Second, // Increased timeout to 60 seconds
+			Timeout: 60 * time.Second,
 			Transport: &http.Transport{
 				TLSHandshakeTimeout:   10 * time.Second, // TLS handshake timeout
 				ResponseHeaderTimeout: 60 * time.Second, // Response header timeout
@@ -47,7 +46,6 @@ func NewClient() *Client {
 	}
 }
 
-// buildURL constructs the API URL with query parameters
 func (c *Client) buildURL(cfg config.Config) string {
 	u, _ := url.Parse(c.baseURL)
 	q := u.Query()
@@ -65,7 +63,6 @@ func (c *Client) buildURL(cfg config.Config) string {
 	return u.String()
 }
 
-// GetWeatherData fetches weather data from Open-Meteo API
 func (c *Client) GetWeatherData(cfg config.Config) (*OpenMeteoResponse, error) {
 	url := c.buildURL(cfg)
 
@@ -97,7 +94,6 @@ func analyzeForecast(data *OpenMeteoResponse) (bool, float64) {
 	return max >= 0.01, max
 }
 
-// GetForecast fetches and processes weather forecast
 func (c *Client) GetForecast(cfg config.Config) (Forecast, error) {
 	data, err := c.GetWeatherData(cfg)
 	if err != nil {

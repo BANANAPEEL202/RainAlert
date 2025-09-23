@@ -13,9 +13,47 @@ type Config struct {
 	Location      string  `json:"location"`
 	Timezone      string  `json:"timezone"`
 	ForecastRange int     `json:"forecast_range_hrs"`
-	NtfyTimes     []int   `json:"ntfy_times"`
+	NtfyTimes     IntOrList   `json:"ntfy_times"`
 	NtfyTopic     string  `json:"ntfy_topic"`
 	IgnoreNoRain  bool    `json:"ignore_no_rain"`
+}
+
+type IntOrList []int
+
+func (iol *IntOrList) UnmarshalJSON(data []byte) error {
+	// Try to unmarshal as a single int
+	var single int
+	if err := json.Unmarshal(data, &single); err == nil {
+		*iol = []int{single}
+		return nil
+	}
+
+	// Try to unmarshal as a slice of ints
+	var list []int
+	if err := json.Unmarshal(data, &list); err == nil {
+		*iol = list
+		return nil
+	}
+
+	return fmt.Errorf("ntfy_times must be an int or a list of ints")
+}
+
+func (iol IntOrList) Validate() error {
+	for _, t := range iol {
+		if t < 0 || t > 23 {
+			return fmt.Errorf("ntfy_times must be between 0 and 23")
+		}
+	}
+	return nil
+}
+
+func (iol IntOrList) Contains(hour int) bool {
+	for _, t := range iol {
+		if t == hour {
+			return true
+		}
+	}
+	return false
 }
 
 func Load(configPath string) (Config, error) {
@@ -40,10 +78,8 @@ func Load(configPath string) (Config, error) {
 		return Config{}, fmt.Errorf("invalid timezone: %v", err)
 	}
 
-	for _, ntfyTime := range cfg.NtfyTimes {
-		if ntfyTime < 0 || ntfyTime > 23 {
-			return Config{}, fmt.Errorf("ntfy_times must be between 0 and 23")
-		}
+	if err := cfg.NtfyTimes.Validate(); err != nil {
+		return Config{}, err
 	}
 
 	if cfg.Latitude < -90 || cfg.Latitude > 90 {
