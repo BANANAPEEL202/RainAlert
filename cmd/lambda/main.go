@@ -35,8 +35,8 @@ func Handler(ctx context.Context) (string, error) {
 
 	// Get current time in the configured timezone
 	currentHour := time.Now().In(loc).Hour()
-	if currentHour != cfg.NtfyHour {
-		log.Printf("Current hour %d does not match ntfy_time %d, exiting.", currentHour, cfg.NtfyHour)
+	if currentHour != cfg.NtfyTimes {
+		log.Printf("Current hour %d does not match ntfy_time %d, exiting.", currentHour, cfg.NtfyTimes)
 		return "done", nil
 	}
 

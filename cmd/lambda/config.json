@@ -4,7 +4,7 @@
   "location": "Atlanta, GA",
   "timezone": "America/New_York",
   "forecast_range_hrs": 24,
-  "ntfy_time": 20,
+  "ntfy_times": 20,
   "ntfy_topic": "weather-alert-jmo",
   "ignore_no_rain": false
 }

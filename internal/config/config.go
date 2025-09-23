@@ -13,7 +13,7 @@ type Config struct {
 	Location      string  `json:"location"`
 	Timezone      string  `json:"timezone"`
 	ForecastRange int     `json:"forecast_range_hrs"`
-	NtfyHour      int     `json:"ntfy_time"`
+	NtfyTimes     []int   `json:"ntfy_times"`
 	NtfyTopic     string  `json:"ntfy_topic"`
 	IgnoreNoRain  bool    `json:"ignore_no_rain"`
 }
@@ -40,8 +40,10 @@ func Load(configPath string) (Config, error) {
 		return Config{}, fmt.Errorf("invalid timezone: %v", err)
 	}
 
-	if cfg.NtfyHour < 0 || cfg.NtfyHour > 23 {
-		return Config{}, fmt.Errorf("ntfy_time must be between 0 and 23")
+	for _, ntfyTime := range cfg.NtfyTimes {
+		if ntfyTime < 0 || ntfyTime > 23 {
+			return Config{}, fmt.Errorf("ntfy_times must be between 0 and 23")
+		}
 	}
 
 	if cfg.Latitude < -90 || cfg.Latitude > 90 {

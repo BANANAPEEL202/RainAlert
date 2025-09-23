@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -30,7 +31,7 @@ func TestLoadConfig(t *testing.T) {
 		"location": "San Francisco",
 		"timezone": "America/Los_Angeles",
 		"forecast_range_hrs": 48,
-		"ntfy_time": 9,
+		"ntfy_times": [0, 3],
 		"ntfy_topic": "weather-updates",
 		"ignore_no_rain": false
 	}`
@@ -43,7 +44,7 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatalf("expected valid config, got error: %v", err)
 	}
 
-	if cfg.Location != "San Francisco" || cfg.ForecastRange != 48 || cfg.NtfyHour != 9 {
+	if cfg.Location != "San Francisco" || cfg.ForecastRange != 48 || !reflect.DeepEqual(cfg.NtfyTimes, []int{0, 3}) {
 		t.Errorf("loaded config values are incorrect: %+v", cfg)
 	}
 }
@@ -55,23 +56,23 @@ func TestInvalidConfig(t *testing.T) {
 	}{
 		{
 			"invalid latitude",
-			`{"latitude": 100, "longitude":0, "location":"x", "timezone":"UTC", "forecast_range_hrs":1, "ntfy_time":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
+			`{"latitude": 100, "longitude":0, "location":"x", "timezone":"UTC", "forecast_range_hrs":1, "ntfy_times":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
 		},
 		{
 			"invalid longitude",
-			`{"latitude": 0, "longitude":200, "location":"x", "timezone":"UTC", "forecast_range_hrs":1, "ntfy_time":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
+			`{"latitude": 0, "longitude":200, "location":"x", "timezone":"UTC", "forecast_range_hrs":1, "ntfy_times":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
 		},
 		{
 			"invalid forecast range",
-			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"UTC", "forecast_range_hrs":500, "ntfy_time":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
+			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"UTC", "forecast_range_hrs":500, "ntfy_times":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
 		},
 		{
-			"invalid ntfy_time",
-			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"UTC", "forecast_range_hrs":1, "ntfy_time":24, "ntfy_topic":"x", "ignore_no_rain":false}`,
+			"invalid ntfy_times",
+			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"UTC", "forecast_range_hrs":1, "ntfy_times":24, "ntfy_topic":"x", "ignore_no_rain":false}`,
 		},
 		{
 			"invalid timezone",
-			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"NotATZ", "forecast_range_hrs":1, "ntfy_time":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
+			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"NotATZ", "forecast_range_hrs":1, "ntfy_times":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
 		},
 	}
 
