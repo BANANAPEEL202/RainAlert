@@ -69,7 +69,6 @@ func (c *Client) buildURL(cfg config.Config) string {
 func (c *Client) GetWeatherData(cfg config.Config) (*OpenMeteoResponse, error) {
 	url := c.buildURL(cfg)
 
-	fmt.Println("Requesting URL:", url) // Debugging line to print the URL
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request to Open-Meteo: %w", err)
