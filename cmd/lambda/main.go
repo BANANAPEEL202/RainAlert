@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"rainalert/internal/client"
 	"rainalert/internal/config"
 	"rainalert/internal/ntfy"
@@ -15,14 +16,28 @@ import (
 )
 
 func Handler(ctx context.Context) (string, error) {
-	cfg, err := config.Load()
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		configPath = "./cmd/lambda/config.json" // default path used for local testing
+	}
+	cfg, err := config.Load(configPath)
 	if err != nil {
+		log.Printf("Error loading config: %v", err)
 		return "", err
 	}
 
-	if time.Now().Hour() != cfg.NtfyHour {
-		log.Printf("Current hour %d does not match ntfy_time %d, exiting.", time.Now().Hour(), cfg.NtfyHour)
-		return "not the right hour", nil
+	// Load the timezone from config
+	loc, err := time.LoadLocation(cfg.Timezone)
+	if err != nil {
+		log.Printf("Error loading timezone %s: %v", cfg.Timezone, err)
+		return "", err
+	}
+
+	// Get current time in the configured timezone
+	currentHour := time.Now().In(loc).Hour()
+	if currentHour != cfg.NtfyHour {
+		log.Printf("Current hour %d does not match ntfy_time %d, exiting.", currentHour, cfg.NtfyHour)
+		return "done", nil
 	}
 
 	client := client.NewClient()
@@ -35,7 +50,12 @@ func Handler(ctx context.Context) (string, error) {
 	}
 
 	if forecast.RainTomorrow {
-		err = ntfy.SendRainAlert(cfg)
+		err = ntfy.SendRainAlert(cfg, forecast.MaxRain)
+		if err != nil {
+			return "", err
+		}
+	} else if !cfg.IgnoreNoRain {
+		err = ntfy.SendNoRainAlert(cfg)
 		if err != nil {
 			return "", err
 		}
