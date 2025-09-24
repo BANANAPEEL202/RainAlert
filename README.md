@@ -6,7 +6,7 @@ A lightweight Lambda function that sends a push notification when rain/slow is e
 - [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 
 ## Configuration
-The following configuration fields must be set in ```cmd/lambda/config.json```
+The following configuration fields must be set in a ```cmd/lambda/config.json``` file. A template config is provided as ```config.example.json```.
 - ```latitude/longitude```: coordinates of the location of interest
 - ```location```: human-friendly name for the location
 - ```timezone```: IANA [timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) identifier for the location
