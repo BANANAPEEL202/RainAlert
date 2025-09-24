@@ -1,2 +1,3 @@
 samconfig.toml
 cmd/lambda/bootstrap
+cmd/lambda/config.json
