@@ -109,6 +109,18 @@ func TestInvalidConfig(t *testing.T) {
 			"invalid timezone",
 			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"NotATZ", "forecast_range_hrs":1, "ntfy_times":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
 		},
+		{
+			"empty ntfy_times",
+			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"UTC", "forecast_range_hrs":1, "ntfy_times":[], "ntfy_topic":"x", "ignore_no_rain":false}`,
+		},
+		{
+			"missing timezone",
+			`{"latitude": 0, "longitude":0, "location":"x", "forecast_range_hrs":1, "ntfy_times":0, "ntfy_topic":"x", "ignore_no_rain":false}`,
+		},
+		{
+			"missing ntfy_topic",
+			`{"latitude": 0, "longitude":0, "location":"x", "timezone":"UTC", "forecast_range_hrs":1, "ntfy_times":0, "ignore_no_rain":false}`,
+		},
 	}
 
 	for _, tt := range tests {

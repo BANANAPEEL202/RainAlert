@@ -56,6 +56,20 @@ func (iol IntOrList) Contains(hour int) bool {
 	return false
 }
 
+func (iol IntOrList) String() string {
+	if len(iol) == 1 {
+		return fmt.Sprintf("%d", iol[0])
+	}
+	output := ""
+	for i, t := range iol {
+		if i > 0 {
+			output += ","
+		}
+		output += fmt.Sprintf("%d", t)
+	}
+	return output
+}
+
 func Load(configPath string) (Config, error) {
 	file, err := os.Open(configPath)
 	if err != nil {
@@ -69,6 +83,13 @@ func Load(configPath string) (Config, error) {
 		return Config{}, err
 	}
 
+	if cfg.Timezone == "" {
+		return Config{}, fmt.Errorf("timezone must be set")
+	}
+	if cfg.NtfyTopic == "" {
+		return Config{}, fmt.Errorf("ntfy_topic must be set")
+	}
+
 	if cfg.ForecastRange < 0 || cfg.ForecastRange > 16*24 {
 		return Config{}, fmt.Errorf("forecast range must be between 0 and 384 hours")
 	}
@@ -78,16 +99,19 @@ func Load(configPath string) (Config, error) {
 		return Config{}, fmt.Errorf("invalid timezone: %v", err)
 	}
 
-	if err := cfg.NtfyTimes.Validate(); err != nil {
-		return Config{}, err
-	}
-
 	if cfg.Latitude < -90 || cfg.Latitude > 90 {
 		return Config{}, fmt.Errorf("latitude must be between -90 and 90")
 	}
 
 	if cfg.Longitude < -180 || cfg.Longitude > 180 {
 		return Config{}, fmt.Errorf("longitude must be between -180 and 180")
+	}
+
+	if len(cfg.NtfyTimes) == 0 {
+		return Config{}, fmt.Errorf("ntfy_times must not be empty")
+	}
+	if err := cfg.NtfyTimes.Validate(); err != nil {
+		return Config{}, err
 	}
 
 	return cfg, nil
