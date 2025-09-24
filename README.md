@@ -1,5 +1,5 @@
 # RainAlert
-A lightweight Lambda function that sends a push notification when rain/slow is expected within the next couple of hours. 
+A lightweight Lambda function that sends a push notification when rain is expected within the next couple of hours. 
 
 ## Prerequisites
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
@@ -9,7 +9,7 @@ A lightweight Lambda function that sends a push notification when rain/slow is e
 The following configuration fields must be set in a ```cmd/lambda/config.json``` file. A template config is provided as ```config.example.json```.
 - ```latitude/longitude```: coordinates of the location of interest
 - ```location```: human-friendly name for the location
-- ```timezone```: IANA [timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) identifier for the location
+- ```timezone```: [IANA](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) timezone identifier for the location
 - ```forecast_range_hrs```: future-looking range of each forecast
 - ```ntfy_times```: one or more hours of the day (0–23) at which notifications should be sent. Can either be a single int or list of ints
 - ```ntfy_topic```: [ntfy](https://docs.ntfy.sh/) notificaton topic. All ntfy topics are public, so choose something that is not easily guessable
