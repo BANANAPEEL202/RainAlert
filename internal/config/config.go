@@ -8,14 +8,14 @@ import (
 )
 
 type Config struct {
-	Latitude      float64 `json:"latitude"`
-	Longitude     float64 `json:"longitude"`
-	Location      string  `json:"location"`
-	Timezone      string  `json:"timezone"`
-	ForecastRange int     `json:"forecast_range_hrs"`
-	NtfyTimes     IntOrList   `json:"ntfy_times"`
-	NtfyTopic     string  `json:"ntfy_topic"`
-	IgnoreNoRain  bool    `json:"ignore_no_rain"`
+	Latitude      float64   `json:"latitude"`
+	Longitude     float64   `json:"longitude"`
+	Location      string    `json:"location"`
+	Timezone      string    `json:"timezone"`
+	ForecastRange int       `json:"forecast_range_hrs"`
+	NtfyTimes     IntOrList `json:"ntfy_times"`
+	NtfyTopic     string    `json:"ntfy_topic"`
+	IgnoreNoRain  bool      `json:"ignore_no_rain"`
 }
 
 type IntOrList []int

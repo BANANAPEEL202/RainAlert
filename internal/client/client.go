@@ -91,7 +91,7 @@ func analyzeForecast(data *OpenMeteoResponse) (bool, float64) {
 			max = hourlyData
 		}
 	}
-	return max >= 0.01, max
+	return max >= 0.1, max
 }
 
 func (c *Client) GetForecast(cfg config.Config) (Forecast, error) {
