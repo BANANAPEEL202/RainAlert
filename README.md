@@ -31,7 +31,7 @@ The following configuration fields must be set in ```cmd/lambda/config.json```
     ```
 
 ## Usage
-- Install the [ntfly](https://ntfy.sh/) app (iOS/Android/Desktop).
+- Install the [ntfy](https://ntfy.sh/) app (iOS/Android/Desktop).
 - Subscribe to the ```ntfy_topic``` configured in config.json
 
 ## Other notes
