@@ -2,7 +2,6 @@
 A lightweight Lambda function that sends a push notification when rain/slow is expected within the next couple of hours. 
 
 ## Prerequisites
-Make sure the following tools are installed and configured:
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
 - [SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 
