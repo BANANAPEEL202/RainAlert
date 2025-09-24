@@ -35,8 +35,11 @@ The following configuration fields must be set in ```cmd/lambda/config.json```
 - Subscribe to the ```ntfy_topic``` configured in config.json
 
 ## Other notes
+Weather data is provided by [Open-Meteo](https://open-meteo.com/).
+
 RainAlert uses the following AWS services and operates well under the free-tier limits for each service:
 - [Lambda](https://aws.amazon.com/lambda/): runs hourly
 - Eventbridge: schedules/triggers lambda function
 - CloudFormation: infrastructure as code service
 - Cloudwatch: minimal logging
+
