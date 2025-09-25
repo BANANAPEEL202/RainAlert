@@ -23,7 +23,7 @@ type OpenMeteoResponse struct {
 
 type Forecast struct {
 	RainTomorrow bool
-	MaxRain      float64
+	TotalRain    float64
 }
 
 type Client struct {
@@ -86,12 +86,14 @@ func (c *Client) GetWeatherData(cfg config.Config) (*OpenMeteoResponse, error) {
 
 func analyzeForecast(data *OpenMeteoResponse) (bool, float64) {
 	max := 0.0
+	total := 0.0
 	for _, hourlyData := range data.Hourly.Precipitation {
 		if hourlyData > max {
 			max = hourlyData
 		}
+		total += hourlyData
 	}
-	return max >= 0.1, max
+	return max >= 0.01, total
 }
 
 func (c *Client) GetForecast(cfg config.Config) (Forecast, error) {
@@ -100,14 +102,14 @@ func (c *Client) GetForecast(cfg config.Config) (Forecast, error) {
 		return Forecast{}, fmt.Errorf("failed to get weather data: %w", err)
 	}
 
-	rainTomorrow, max := analyzeForecast(data)
+	rainTomorrow, total := analyzeForecast(data)
 	for hour, precip := range data.Hourly.Precipitation {
 		log.Printf("%s: %.2f inches of precipitation", data.Hourly.Time[hour], precip)
 	}
-	log.Printf("Rain expected: %v, Max precipitation: %.2f inches", rainTomorrow, max)
+	log.Printf("Rain expected: %v, Max precipitation: %.2f inches", rainTomorrow, total)
 
 	return Forecast{
 		RainTomorrow: rainTomorrow,
-		MaxRain:      max,
+		TotalRain:    total,
 	}, nil
 }

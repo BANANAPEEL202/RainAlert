@@ -90,21 +90,21 @@ func TestGetWeatherData_HTTPError(t *testing.T) {
 
 func TestGetForecast(t *testing.T) {
 	tests := []struct {
-		name           string
-		mockResponse   string
-		expectedRain   bool
-		expectedMaxPre float64
+		name              string
+		mockResponse      string
+		expectedRain      bool
+		expectedTotalRain float64
 	}{
 		{
 			name: "rain expected",
 			mockResponse: `{
 				"hourly": {
 					"time": ["2023-09-20T00:00", "2023-09-20T01:00", "2023-09-20T02:00"],
-					"precipitation": [0.0, 0.2, 0.5]
+					"precipitation": [0.0, 0.01, 0.03]
 				}
 			}`,
-			expectedRain:   true,
-			expectedMaxPre: 0.5,
+			expectedRain:      true,
+			expectedTotalRain: 0.04,
 		},
 		{
 			name: "no rain",
@@ -114,8 +114,8 @@ func TestGetForecast(t *testing.T) {
 					"precipitation": [0.0, 0.0, 0.0]
 				}
 			}`,
-			expectedRain:   false,
-			expectedMaxPre: 0.0,
+			expectedRain:      false,
+			expectedTotalRain: 0.0,
 		},
 		// Add more test cases here
 	}
@@ -142,8 +142,8 @@ func TestGetForecast(t *testing.T) {
 				t.Errorf("Expected rain %v, got %v", tt.expectedRain, rainDetected)
 			}
 
-			if maxPrecip != tt.expectedMaxPre {
-				t.Errorf("Expected max precipitation %.1f, got %.1f", tt.expectedMaxPre, maxPrecip)
+			if maxPrecip != tt.expectedTotalRain {
+				t.Errorf("Expected total precipitation %.2f, got %.2f", tt.expectedTotalRain, maxPrecip)
 			}
 		})
 	}

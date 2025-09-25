@@ -47,7 +47,7 @@ func Handler(ctx context.Context) (string, error) {
 	}
 
 	if forecast.RainTomorrow {
-		err = ntfy.SendRainAlert(cfg, forecast.MaxRain)
+		err = ntfy.SendRainAlert(cfg, forecast.TotalRain)
 		if err != nil {
 			return "", err
 		}
